@@ -102,10 +102,10 @@ function addMessage(text, sender) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     
-    const textP = document.createElement('p');
-    textP.textContent = text;
+    // Convert markdown-style formatting to HTML
+    const formattedText = formatMessage(text);
+    contentDiv.innerHTML = formattedText;
     
-    contentDiv.appendChild(textP);
     messageDiv.appendChild(contentDiv);
     chatMessages.appendChild(messageDiv);
     
@@ -113,6 +113,102 @@ function addMessage(text, sender) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     return messageDiv;
+}
+
+// Format message with basic markdown support
+function formatMessage(text) {
+    // Escape HTML to prevent XSS
+    let formatted = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    
+    // Convert markdown bold (**text** or __text__) to HTML
+    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    
+    // Convert markdown italic (*text* or _text_)
+    formatted = formatted.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    formatted = formatted.replace(/_(.+?)_/g, '<em>$1</em>');
+    
+    // Convert line breaks
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Convert markdown tables
+    if (formatted.includes('|')) {
+        formatted = convertMarkdownTable(formatted);
+    }
+    
+    // Wrap in paragraph if no block elements
+    if (!formatted.includes('<table') && !formatted.includes('<br>')) {
+        formatted = `<p>${formatted}</p>`;
+    }
+    
+    return formatted;
+}
+
+// Convert markdown table to HTML table
+function convertMarkdownTable(text) {
+    const lines = text.split('<br>');
+    let result = [];
+    let inTable = false;
+    let tableRows = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line.startsWith('|') && line.endsWith('|')) {
+            if (!inTable) {
+                inTable = true;
+                tableRows = [];
+            }
+            tableRows.push(line);
+        } else {
+            if (inTable && tableRows.length > 0) {
+                result.push(buildHtmlTable(tableRows));
+                tableRows = [];
+                inTable = false;
+            }
+            if (line) {
+                result.push(line);
+            }
+        }
+    }
+    
+    if (inTable && tableRows.length > 0) {
+        result.push(buildHtmlTable(tableRows));
+    }
+    
+    return result.join('<br>');
+}
+
+// Build HTML table from markdown rows
+function buildHtmlTable(rows) {
+    if (rows.length < 2) return rows.join('<br>');
+    
+    let html = '<table>';
+    
+    // Header row
+    const headerCells = rows[0].split('|').filter(cell => cell.trim());
+    html += '<thead><tr>';
+    headerCells.forEach(cell => {
+        html += `<th>${cell.trim()}</th>`;
+    });
+    html += '</tr></thead>';
+    
+    // Body rows (skip separator row at index 1)
+    html += '<tbody>';
+    for (let i = 2; i < rows.length; i++) {
+        const cells = rows[i].split('|').filter(cell => cell.trim());
+        html += '<tr>';
+        cells.forEach(cell => {
+            html += `<td>${cell.trim()}</td>`;
+        });
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+    
+    return html;
 }
 
 // Add typing indicator

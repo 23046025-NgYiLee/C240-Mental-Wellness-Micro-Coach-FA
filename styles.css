@@ -271,6 +271,59 @@ main {
     word-wrap: break-word;
 }
 
+.message-content p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.message-content strong {
+    font-weight: 600;
+}
+
+.message-content em {
+    font-style: italic;
+}
+
+.message-content table {
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.message-content table th,
+.message-content table td {
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.message-content table th {
+    background: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.message-content table tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.message-content table tr:hover {
+    background: #f3f4f6;
+}
+
+.bot-message .message-content table th {
+    background: var(--primary-color);
+}
+
+.user-message .message-content table th {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.user-message .message-content table td {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
 .bot-message .message-content {
     background: var(--white);
     color: var(--text-color);
