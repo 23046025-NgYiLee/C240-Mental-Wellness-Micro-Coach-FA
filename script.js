@@ -51,21 +51,39 @@ async function sendMessage() {
             })
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
+        // Get response text first
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
         
         // Remove typing indicator
         typingIndicator.remove();
         
+        // Try to parse as JSON, but handle plain text responses too
+        let botMessage;
+        try {
+            const data = JSON.parse(responseText);
+            console.log('Parsed JSON data:', data);
+            // Try different possible response fields
+            botMessage = data.response || data.message || data.output || data.text || data.reply || JSON.stringify(data);
+        } catch (parseError) {
+            console.log('Not JSON, using text response:', parseError);
+            // If not JSON, use the text response directly
+            botMessage = responseText || "I'm here to support you. Could you tell me more about what's on your mind?";
+        }
+        
         // Add bot response
-        const botMessage = data.response || data.message || "I'm here to support you. Could you tell me more about what's on your mind?";
         addMessage(botMessage, 'bot');
         
     } catch (error) {
         console.error('Error sending message:', error);
+        console.error('Error details:', error.message, error.stack);
         typingIndicator.remove();
         addMessage("I apologize, but I'm having trouble connecting right now. Please try again in a moment. If you're in crisis, please reach out to a mental health professional or emergency services.", 'bot');
     } finally {
